@@ -1,0 +1,28 @@
+{
+    "name": "itk-dev/os2forms_openid_connect",
+    "type": "drupal-module",
+    "description": "OS2Forms OpenID Connect",
+    "keywords": [
+        "OS2Forms"
+    ],
+    "homepage": "https://github.com/rimi-itk/os2forms_openid_connect",
+    "minimum-stability": "dev",
+    "require-dev": {
+        "drupal/coder": "9999999-dev",
+        "dealerdirect/phpcodesniffer-composer-installer": "9999999-dev"
+    },
+    "scripts": {
+        "coding-standards-check/phpcs": [
+            "vendor/bin/phpcs --standard=phpcs.xml.dist"
+        ],
+        "coding-standards-check": [
+            "@coding-standards-check/phpcs"
+        ],
+        "coding-standards-apply/phpcs": [
+            "vendor/bin/phpcbf --standard=phpcs.xml.dist"
+        ],
+        "coding-standards-apply": [
+            "@coding-standards-apply/phpcs"
+        ]
+    }
+}

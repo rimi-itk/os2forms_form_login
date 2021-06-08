@@ -1,0 +1,14 @@
+services:
+  os2forms_openid_connect.form_helper:
+    class: Drupal\os2forms_openid_connect\Helper\FormHelper
+    arguments:
+      - '@itkdev_openid_connect_drupal.config_helper'
+
+  os2forms_openid_connect.login_redirect_subscriber:
+    class: Drupal\os2forms_openid_connect\EventSubscriber\LoginRedirectSubscriber
+    arguments:
+      - '@page_cache_kill_switch'
+      - '@entity_field.manager'
+      - '@current_user'
+    tags:
+      - { name: event_subscriber }
