@@ -1,6 +1,6 @@
-name: 'OS2Forms OpenID Connect'
+name: 'OS2Forms Form login'
 type: module
-description: 'OS2Forms OpenID Connect'
+description: 'Require login on forms'
 core: 8.x
 package: 'OS2Forms'
 core_version_requirement: ^8|^9

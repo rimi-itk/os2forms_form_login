@@ -1,12 +1,12 @@
 <?php
 
-namespace Drupal\os2forms_openid_connect\EventSubscriber;
+namespace Drupal\os2forms_form_login\EventSubscriber;
 
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\PageCache\ResponsePolicy\KillSwitch;
 use Drupal\Core\Session\AccountInterface;
-use Drupal\Core\Url;
-use Drupal\os2forms_openid_connect\Helper\FormHelper;
+use Drupal\os2forms_form_login\Helper\FormHelper;
+use Drupal\os2forms_form_login\Helper\LoginProviderHelper;
 use Drupal\webform\WebformInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -18,6 +18,13 @@ use Symfony\Component\HttpKernel\KernelEvents;
  * Login redirect subscriber.
  */
 class LoginRedirectSubscriber implements EventSubscriberInterface {
+  /**
+   * The login provider helper.
+   *
+   * @var \Drupal\os2forms_form_login\Helper\LoginProviderHelper
+   */
+  private $loginProviderHelper;
+
   /**
    * The kill switch.
    *
@@ -42,7 +49,8 @@ class LoginRedirectSubscriber implements EventSubscriberInterface {
   /**
    * Constructor.
    */
-  public function __construct(KillSwitch $killSwitch, EntityFieldManagerInterface $entityFieldManager, AccountInterface $account) {
+  public function __construct(LoginProviderHelper $loginProviderHelper, KillSwitch $killSwitch, EntityFieldManagerInterface $entityFieldManager, AccountInterface $account) {
+    $this->loginProviderHelper = $loginProviderHelper;
     $this->killSwitch = $killSwitch;
     $this->entityFieldManager = $entityFieldManager;
     $this->account = $account;
@@ -64,12 +72,18 @@ class LoginRedirectSubscriber implements EventSubscriberInterface {
 
     $settings = $webform->getThirdPartySetting(FormHelper::MODULE, FormHelper::MODULE);
 
-    $loginMethod = $settings['login_method'];
-    if (NULL !== $loginMethod) {
-      $this->killSwitch->trigger();
+    $id = $settings[LoginProviderHelper::PROVIDER_SETTING];
+    $provider = $this->loginProviderHelper->getLoginProvider($id);
+    if (NULL !== $provider) {
+      // @todo Check if account is authenticated with provider.
+      if ($this->account->isAuthenticated()) {
+        return;
+      }
 
-      $loginUrl = Url::fromRoute('itkdev_openid_connect_drupal.openid_connect', ['key' => $loginMethod]);
-      $response = new RedirectResponse($loginUrl->toString());
+      $loginUrl = $this->loginProviderHelper->getLoginUrl($provider, $request->getRequestUri());
+
+      $this->killSwitch->trigger();
+      $response = new RedirectResponse($loginUrl);
       $event->setResponse($response);
       $event->stopPropagation();
     }

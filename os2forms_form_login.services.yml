@@ -1,0 +1,20 @@
+services:
+  os2forms_form_login.login_provider_helper:
+    class: Drupal\os2forms_form_login\Helper\LoginProviderHelper
+    arguments:
+      - '@itkdev_openid_connect_drupal.config_helper'
+      -
+  os2forms_form_login.form_helper:
+    class: Drupal\os2forms_form_login\Helper\FormHelper
+    arguments:
+      - '@os2forms_form_login.login_provider_helper'
+
+  os2forms_form_login.login_redirect_subscriber:
+    class: Drupal\os2forms_form_login\EventSubscriber\LoginRedirectSubscriber
+    arguments:
+      - '@os2forms_form_login.login_provider_helper'
+      - '@page_cache_kill_switch'
+      - '@entity_field.manager'
+      - '@current_user'
+    tags:
+      - { name: event_subscriber }

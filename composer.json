@@ -1,11 +1,11 @@
 {
-    "name": "itk-dev/os2forms_openid_connect",
+    "name": "itk-dev/os2forms_form_login",
     "type": "drupal-module",
-    "description": "OS2Forms OpenID Connect",
+    "description": "OS2Forms form login",
     "keywords": [
         "OS2Forms"
     ],
-    "homepage": "https://github.com/rimi-itk/os2forms_openid_connect",
+    "homepage": "https://github.com/itk-dev/os2forms_form_login",
     "minimum-stability": "dev",
     "require-dev": {
         "drupal/coder": "9999999-dev",

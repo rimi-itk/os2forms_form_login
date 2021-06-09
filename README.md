@@ -1,6 +1,13 @@
-# OS2Forms OpenID Connect
+# OS2Forms Form login
 
-This module needs a much better name!
+Require login on forms.
+
+## Installation
+
+```sh
+composer require drupal/os2forms_form_login
+drush pm:enable os2forms_form_login
+```
 
 ## Coding standards
 

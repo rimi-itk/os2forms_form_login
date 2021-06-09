@@ -1,10 +1,9 @@
 <?php
 
-namespace Drupal\os2forms_openid_connect\Helper;
+namespace Drupal\os2forms_form_login\Helper;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
-use Drupal\itkdev_openid_connect_drupal\Helper\ConfigHelper as OpenIDConnectConfigHelper;
 
 /**
  * Form helper.
@@ -12,20 +11,20 @@ use Drupal\itkdev_openid_connect_drupal\Helper\ConfigHelper as OpenIDConnectConf
 class FormHelper {
   use StringTranslationTrait;
 
-  public const MODULE = 'os2forms_openid_connect';
+  public const MODULE = 'os2forms_form_login';
 
   /**
-   * The OpenID Connect config helper.
+   * The login provider helper.
    *
-   * @var \Drupal\itkdev_openid_connect_drupal\Helper\ConfigHelper
+   * @var LoginProviderHelper
    */
-  private $openIDConnectConfigHelper;
+  private $loginProviderHelper;
 
   /**
    * Constructor.
    */
-  public function __construct(OpenIDConnectConfigHelper $openIDConnectConfigHelper) {
-    $this->openIDConnectConfigHelper = $openIDConnectConfigHelper;
+  public function __construct(LoginProviderHelper $loginProviderHelper) {
+    $this->loginProviderHelper = $loginProviderHelper;
   }
 
   /**
@@ -39,22 +38,22 @@ class FormHelper {
     // OS2Forms NemID.
     $form['third_party_settings'][static::MODULE][static::MODULE] = [
       '#type' => 'details',
-      '#title' => $this->t('OS2Forms OpenID Connect settings'),
+      '#title' => $this->t('OS2Forms Form login settings'),
       '#open' => TRUE,
     ];
 
-    $authenticators = $this->openIDConnectConfigHelper->getAuthenticators();
-    $authenticatorOptions = array_filter(array_map(static function (array $authenticator) {
-      return $authenticator['name'] ?? NULL;
-    }, $authenticators));
+    $loginProviders = $this->loginProviderHelper->getLoginProviders();
+    $loginProvidersOptions = array_filter(array_map(static function (array $provider) {
+      return $provider['name'] ?? NULL;
+    }, $loginProviders));
 
-    $form['third_party_settings'][static::MODULE][static::MODULE]['login_method'] = [
+    $form['third_party_settings'][static::MODULE][static::MODULE][LoginProviderHelper::PROVIDER_SETTING] = [
       '#type' => 'select',
       '#title' => $this->t('Login type'),
-      '#default_value' => $settings['login_method'] ?? NULL,
+      '#default_value' => $settings[LoginProviderHelper::PROVIDER_SETTING] ?? NULL,
       '#empty_option' => $this->t('Login not required'),
-      '#options' => $authenticatorOptions,
-      '#description' => $this->t('Require login using the selected login method.'),
+      '#options' => $loginProvidersOptions,
+      '#description' => $this->t('Require login using the selected login provider.'),
     ];
   }
 

@@ -8,4 +8,4 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-- Added os2forms_openid_connect module
+- Added os2forms_form_login module

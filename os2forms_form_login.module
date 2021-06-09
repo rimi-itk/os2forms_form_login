@@ -1,0 +1,32 @@
+<?php
+
+/**
+ * @file
+ * Contains os2forms_form_login.module.
+ */
+
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Routing\RouteMatchInterface;
+
+/**
+ * Implements hook_help().
+ */
+function os2forms_form_login_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    // Main module help for the os2forms_form_login module.
+    case 'help.page.os2forms_form_login':
+      $output = '';
+      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('OS2Forms Form login') . '</p>';
+      return $output;
+
+    default:
+  }
+}
+
+/**
+ * Implements hook_webform_third_party_settings_form_alter().
+ */
+function os2forms_form_login_webform_third_party_settings_form_alter(&$form, FormStateInterface $form_state) {
+  Drupal::service('os2forms_form_login.form_helper')->webformThirdPartySettingsFormAlter($form, $form_state);
+}
