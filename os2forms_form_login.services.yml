@@ -3,11 +3,14 @@ services:
     class: Drupal\os2forms_form_login\Helper\LoginProviderHelper
     arguments:
       - '@itkdev_openid_connect_drupal.config_helper'
-      -
-  os2forms_form_login.form_helper:
-    class: Drupal\os2forms_form_login\Helper\FormHelper
+      - '@request_stack'
+      - '@current_user'
+
+  os2forms_form_login.webform_helper:
+    class: Drupal\os2forms_form_login\Helper\WebformHelper
     arguments:
       - '@os2forms_form_login.login_provider_helper'
+      - '@messenger'
 
   os2forms_form_login.login_redirect_subscriber:
     class: Drupal\os2forms_form_login\EventSubscriber\LoginRedirectSubscriber

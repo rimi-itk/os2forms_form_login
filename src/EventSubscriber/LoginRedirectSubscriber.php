@@ -5,7 +5,7 @@ namespace Drupal\os2forms_form_login\EventSubscriber;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\PageCache\ResponsePolicy\KillSwitch;
 use Drupal\Core\Session\AccountInterface;
-use Drupal\os2forms_form_login\Helper\FormHelper;
+use Drupal\os2forms_form_login\Helper\WebformHelper;
 use Drupal\os2forms_form_login\Helper\LoginProviderHelper;
 use Drupal\webform\WebformInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
@@ -70,14 +70,16 @@ class LoginRedirectSubscriber implements EventSubscriberInterface {
       return;
     }
 
-    $settings = $webform->getThirdPartySetting(FormHelper::MODULE, FormHelper::MODULE);
+    $settings = $webform->getThirdPartySetting(WebformHelper::MODULE, WebformHelper::MODULE);
 
     $id = $settings[LoginProviderHelper::PROVIDER_SETTING];
     $provider = $this->loginProviderHelper->getLoginProvider($id);
     if (NULL !== $provider) {
-      // @todo Check if account is authenticated with provider.
-      if ($this->account->isAuthenticated()) {
-        return;
+      if ($this->isAuthenticatedWithProvider($provider)) {
+        $forceAuthentication = $settings[LoginProviderHelper::FORCE_AUTHENTICATION] ?? FALSE;
+        if (!$forceAuthentication) {
+          return;
+        }
       }
 
       $loginUrl = $this->loginProviderHelper->getLoginUrl($provider, $request->getRequestUri());
@@ -96,6 +98,13 @@ class LoginRedirectSubscriber implements EventSubscriberInterface {
     return [
       KernelEvents::REQUEST => ['redirectToLogin'],
     ];
+  }
+
+  /**
+   * Check if user is authenticated with a login provider.
+   */
+  private function isAuthenticatedWithProvider(array $provider): bool {
+    return $provider === $this->loginProviderHelper->getActiveLoginProvider();
   }
 
   /**
