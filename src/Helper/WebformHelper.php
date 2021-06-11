@@ -41,7 +41,7 @@ class WebformHelper {
   /**
    * Implements hook_webform_third_party_settings_form_alter().
    */
-  public function webformThirdPartySettingsFormAlter(array &$form, FormStateInterface $form_state) {
+  public function thirdPartySettingsFormAlter(array &$form, FormStateInterface $form_state) {
     /** @var \Drupal\webform\WebformInterface $webform */
     $webform = $form_state->getFormObject()->getEntity();
     $settings = $webform->getThirdPartySetting(static::MODULE, static::MODULE);

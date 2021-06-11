@@ -72,7 +72,7 @@ class LoginRedirectSubscriber implements EventSubscriberInterface {
 
     $settings = $webform->getThirdPartySetting(WebformHelper::MODULE, WebformHelper::MODULE);
 
-    $id = $settings[LoginProviderHelper::PROVIDER_SETTING];
+    $id = $settings[LoginProviderHelper::PROVIDER_SETTING] ?? '';
     $provider = $this->loginProviderHelper->getLoginProvider($id);
     if (NULL !== $provider) {
       if ($this->isAuthenticatedWithProvider($provider)) {
