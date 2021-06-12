@@ -91,12 +91,10 @@ class WebformHelper {
     $webformLoginProvider = $this->loginProviderHelper->getWebformLoginProvider($webform);
 
     if (NULL !== $webformLoginProvider) {
-      $activeLoginProvider = $this->loginProviderHelper->getActiveLoginProvider();
       $signInRequired = FALSE;
 
-      $location = $this->loginProviderHelper->getCurrentRequestUri();
-      if (NULL === $activeLoginProvider) {
-        $signInUrl = $this->loginProviderHelper->getLoginUrl($webformLoginProvider, '<current>');
+      if (!$this->loginProviderHelper->isAuthenticated()) {
+        $signInUrl = $this->loginProviderHelper->getAuthenticationUrl($webformLoginProvider, '<current>');
         $this->messenger->addWarning(
           $this->t(
             'You have to sign in to fill out this form. Please <a href="@sign_in_url">sign in and try again<a/>.',
@@ -107,11 +105,12 @@ class WebformHelper {
         );
         $signInRequired = TRUE;
       }
-      elseif ($activeLoginProvider !== $webformLoginProvider) {
+      elseif (!$this->loginProviderHelper->isAuthenticatedByProvider($webformLoginProvider)) {
+        $location = $this->loginProviderHelper->getCurrentRequestUri();
         $signOutUrl = Url::fromRoute('user.logout', [], ['query' => ['location' => $location]])->toString();
         $this->messenger->addWarning(
           $this->t(
-            'Your current login type does match the login type required by the webform. Please <a href="@sign_out_url">sign out and try again<a/>.',
+            'Your current authorization does match the authorization required by this webform. Please <a href="@sign_out_url">sign out and try again<a/>.',
             [
               '@sign_out_url' => $signOutUrl,
             ]
@@ -121,6 +120,7 @@ class WebformHelper {
       }
 
       if ($signInRequired) {
+        $form['#attributes']['class'][] = 'os2forms-form-login--login-required';
         // Disable all action elements when user is not allowed to submit form.
         foreach (Element::children($form['actions']) as $key) {
           $form['actions'][$key]['#disabled'] = TRUE;

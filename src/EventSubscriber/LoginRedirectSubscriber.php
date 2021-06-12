@@ -75,14 +75,18 @@ class LoginRedirectSubscriber implements EventSubscriberInterface {
     $id = $settings[LoginProviderHelper::PROVIDER_SETTING] ?? '';
     $provider = $this->loginProviderHelper->getLoginProvider($id);
     if (NULL !== $provider) {
-      if ($this->isAuthenticatedWithProvider($provider)) {
-        $forceAuthentication = $settings[LoginProviderHelper::FORCE_AUTHENTICATION] ?? FALSE;
+      if ($this->loginProviderHelper->isAuthenticatedByProvider($provider)) {
+        return;
+      }
+
+      $forceAuthentication = (bool) ($settings[LoginProviderHelper::FORCE_AUTHENTICATION] ?? FALSE);
+      if ($this->loginProviderHelper->isAuthenticated()) {
         if (!$forceAuthentication) {
           return;
         }
       }
 
-      $loginUrl = $this->loginProviderHelper->getLoginUrl($provider, $request->getRequestUri());
+      $loginUrl = $this->loginProviderHelper->getAuthenticationUrl($provider, $request->getRequestUri());
 
       $this->killSwitch->trigger();
       $response = new RedirectResponse($loginUrl);
@@ -98,13 +102,6 @@ class LoginRedirectSubscriber implements EventSubscriberInterface {
     return [
       KernelEvents::REQUEST => ['redirectToLogin'],
     ];
-  }
-
-  /**
-   * Check if user is authenticated with a login provider.
-   */
-  private function isAuthenticatedWithProvider(array $provider): bool {
-    return $provider === $this->loginProviderHelper->getActiveLoginProvider();
   }
 
   /**

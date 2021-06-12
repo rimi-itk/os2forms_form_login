@@ -5,8 +5,6 @@ namespace Drupal\os2forms_form_login\Helper;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
-use Drupal\Core\Url;
-use Drupal\itkdev_openid_connect_drupal\Helper\ConfigHelper as OpenIDConnectConfigHelper;
 use Drupal\os2forms_form_login\Exception\UnknownLoginProviderException;
 use Drupal\webform\WebformInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -22,11 +20,11 @@ class LoginProviderHelper {
   public const FORCE_AUTHENTICATION = 'os2forms_form_login_force_relogin';
 
   /**
-   * The OpenID Connect config helper.
+   * The authorization managers.
    *
-   * @var \Drupal\itkdev_openid_connect_drupal\Helper\ConfigHelper
+   * @var array
    */
-  private $openIDConnectConfigHelper;
+  private $authorizationManagers;
 
   /**
    * The request stack.
@@ -45,10 +43,11 @@ class LoginProviderHelper {
   /**
    * Constructor.
    */
-  public function __construct(OpenIDConnectConfigHelper $openIDConnectConfigHelper, RequestStack $requestStack, AccountProxyInterface $currentUser) {
-    $this->openIDConnectConfigHelper = $openIDConnectConfigHelper;
+  public function __construct(array $authorizationManagers, RequestStack $requestStack, AccountProxyInterface $currentUser) {
+    $this->authorizationManagers = $authorizationManagers;
     $this->requestStack = $requestStack;
     $this->currentUser = $currentUser;
+
   }
 
   /**
@@ -60,18 +59,12 @@ class LoginProviderHelper {
   public function getLoginProviders(): array {
     $providers = [];
 
-    $authenticators = $this->openIDConnectConfigHelper->getAuthenticators();
-    foreach ($authenticators as $key => &$authenticator) {
-      $authenticator['module'] = 'itkdev_openid_connect_drupal';
-      $authenticator['key'] = $key;
+    foreach ($this->authorizationManagers as $authorizationManager) {
+      $providers[] = array_values($authorizationManager->getAuthenticators());
     }
-    $providers[] = $authenticators;
 
-    // Flatten and add provider ids.
+    // Flatten.
     $providers = array_merge(...$providers);
-    foreach ($providers as &$provider) {
-      $provider['id'] = $provider['module'] . '.' . $provider['key'];
-    }
 
     return array_column($providers, NULL, 'id');
   }
@@ -104,7 +97,7 @@ class LoginProviderHelper {
    * @throws \Drupal\os2forms_form_login\Exception\UnknownLoginProviderException
    *   Throws if provider cannot be found.
    */
-  public function getLoginUrl(array $provider, string $location = NULL): string {
+  public function getAuthenticationUrl(array $provider, string $location = NULL): string {
     $query = [];
     if ($location) {
       if ('<current>' === $location) {
@@ -113,13 +106,10 @@ class LoginProviderHelper {
       $query['location'] = $location;
     }
 
-    switch ($provider['module'] ?? NULL) {
-      case 'itkdev_openid_connect_drupal':
-        $url = Url::fromRoute('itkdev_openid_connect_drupal.openid_connect', $query + ['key' => $provider['key']]);
+    foreach ($this->authorizationManagers as $authorizationManager) {
+      if (NULL !== ($url = $authorizationManager->getAuthenticationUrl($provider, $query))) {
         break;
-
-      default:
-        throw new UnknownLoginProviderException();
+      }
     }
 
     if (!isset($url)) {
@@ -146,10 +136,41 @@ class LoginProviderHelper {
       return NULL;
     }
 
-    // @todo How do we actually get the current user's authentication provider?
-    return $this->getLoginProvider('itkdev_openid_connect_drupal.nemid');
+    // @todo handle multiple authorization managers.
+    $provider = $this->authorizationManagers->getActiveLoginProvider();
+    if (NULL !== $provider) {
+      return $provider;
+    }
 
     return NULL;
+  }
+
+  /**
+   * Check if current user is authenticated by a provider.
+   */
+  public function isAuthenticatedByProvider($provider): bool {
+    if (!$this->isAuthenticated()) {
+      return FALSE;
+    }
+
+    if (is_array($provider)) {
+      $provider = $provider['id'] ?? NULL;
+    }
+
+    foreach ($this->authorizationManagers as $authorizationManager) {
+      if ($authorizationManager->isAuthorizedByProvider($provider)) {
+        return TRUE;
+      }
+    }
+
+    return FALSE;
+  }
+
+  /**
+   * Check if current user is authenticated.
+   */
+  public function isAuthenticated() {
+    return $this->currentUser->isAuthenticated();
   }
 
   /**

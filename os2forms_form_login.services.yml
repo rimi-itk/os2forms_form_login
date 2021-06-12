@@ -2,7 +2,8 @@ services:
   os2forms_form_login.login_provider_helper:
     class: Drupal\os2forms_form_login\Helper\LoginProviderHelper
     arguments:
-      - '@itkdev_openid_connect_drupal.config_helper'
+      - # Authorization managers.
+        - '@itkdev_openid_connect_drupal.authorization_manager'
       - '@request_stack'
       - '@current_user'
 
